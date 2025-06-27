@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameStore - Painel Administrativo</title>
+    <!-- Icons e Fonts -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilos CSS -->
+    <style>
+    .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px); /* Ajuste conforme necessário */
+}
+.modal-content {
+    /* ... outros estilos existentes ... */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+        :root {
+            --primary: #0072CE;
+            --primary-container: #D1E4FF;
+            --on-primary: #FFFFFF;
+            --secondary: #535F70;
+            --surface: #F8F9FA;
+            --surface-container: #F0F2F5;
+            --surface-variant: #E1E2E9;
+            --on-surface: #1A1C1E;
+            --outline: #72777F;
+            --error: #BA1A1A;
+            --error-container: #FFDAD6;
+            --on-error-container: #410002;
+            --success: #1E8449;
+            --success-container: #D5F5E3;
+            --shadow-color: 220, 220, 220;
+            --shadow-elevation-low: 0 1px 2px 0 rgb(var(--shadow-color) / 0.5);
+            --shadow-elevation-medium: 0 2px 4px -1px rgb(var(--shadow-color) / 0.5), 0 4px 5px 0 rgb(var(--shadow-color) / 0.4);
+            --radius-small: 4px;
+            --radius-medium: 8px;
+            --radius-large: 16px;
+            --radius-full: 999px;
+            --animation-speed-fast: 0.2s;
+            --animation-speed-normal: 0.4s;
+        }
+
+        /* Animações Globais */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.95) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        @keyframes toastInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes pulse { 0% { background-color: #f0f2f5; } 50% { background-color: #e9eaec; } 100% { background-color: #f0f2f5; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Reset e Estilos Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--surface-container);
+            color: var(--on-surface);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .admin-container { display: flex; min-height: 100vh; }
+
+        /* --- Barra Lateral (Sidebar) --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--surface);
+            border-right: 1px solid var(--surface-variant);
+            display: flex; flex-direction: column;
+            transition: width var(--animation-speed-fast) ease;
+        }
+        .sidebar-header { padding: 24px 16px; border-bottom: 1px solid var(--surface-variant); text-align: center; }
+        .sidebar-header h2 { color: var(--primary); font-size: 1.75rem; font-weight: 700; letter-spacing: -1px; }
+        .sidebar-header p { font-size: 0.875rem; color: var(--outline); }
+        .sidebar-nav { flex: 1; padding: 16px 0; }
+        .nav-link {
+            display: flex; align-items: center; padding: 12px 24px; margin: 0 12px 4px 12px;
+            color: var(--secondary); text-decoration: none; border-radius: var(--radius-medium);
+            transition: all var(--animation-speed-fast) ease;
+        }
+        .nav-link .material-icons { margin-right: 16px; font-size: 1.25rem; }
+        .nav-link:hover { background-color: var(--surface-variant); color: var(--primary); }
+        .nav-link.active { background-color: var(--primary-container); color: var(--primary); font-weight: 700; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid var(--surface-variant); }
+
+        /* --- Conteúdo Principal --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar {
+            background-color: var(--surface); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--surface-variant); z-index: 10; position: sticky; top: 0; height: 64px;
+        }
+        .search-bar { position: relative; flex: 1; max-width: 500px; margin-right: 16px; }
+        .search-bar input {
+            padding: 10px 48px 10px 16px; border-radius: var(--radius-full); border: 1px solid var(--surface-variant);
+            font-size: 0.9rem; outline: none; transition: all var(--animation-speed-fast) ease; width: 100%;
+        }
+        .search-bar input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 114, 206, 0.2); }
+        .search-bar .icon-button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: var(--primary); background: transparent; }
+        .user-info { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+        .avatar {
+            width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-container); color: var(--primary);
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem;
+        }
+        .content-section { flex: 1; padding: 32px; overflow-y: auto; display: none; animation: fadeIn var(--animation-speed-normal) ease; }
+        .content-section.active { display: block; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .section-header h1 { font-size: 2rem; font-weight: 500; }
+        
+        /* --- Cards e Componentes --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        .stat-card {
+            background-color: var(--surface); border-radius: var(--radius-large); padding: 24px; display: flex;
+            align-items: center; gap: 16px; border: 1px solid var(--surface-variant);
+            transition: transform var(--animation-speed-fast), box-shadow var(--animation-speed-fast);
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-elevation-medium); }
+        .stat-card .stat-info h3 { font-size: 2rem; color: var(--primary); }
+        .stat-card p { color: var(--secondary); }
+        .stat-card .skeleton { width: 60%; height: 28px; background-color: #eee; border-radius: 4px; animation: pulse 1.5s infinite; }
+        .stat-card .skeleton.short { width: 80%; height: 20px; margin-top: 8px; }
+
+        .card { background-color: var(--surface); border-radius: var(--radius-large); border: 1px solid var(--surface-variant); box-shadow: var(--shadow-elevation-low); }
+        .card-header { padding: 16px 24px; border-bottom: 1px solid var(--surface-variant); display: flex; justify-content: space-between; align-items: center; }
+        .card-header h2, .card-header h3 { font-size: 1.25rem; font-weight: 500; }
+        .card-body { padding: 24px; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--surface-variant); white-space: nowrap; vertical-align: middle; }
+        th { color: var(--secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td.loading-cell { text-align: center; padding: 48px; color: var(--outline); font-style: italic; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: var(--surface-container); }
+
+        /* --- Botões --- */
+        .button {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 24px;
+            border-radius: var(--radius-full); font-weight: 700; font-size: 0.875rem; cursor: pointer;
+            transition: all var(--animation-speed-fast) ease; border: 1px solid transparent; text-decoration: none; text-transform: uppercase;
+        }
+        .button.contained { background-color: var(--primary); color: var(--on-primary); }
+        .button.contained:hover { background-color: #0059a4; box-shadow: var(--shadow-elevation-medium); }
+        .button.text { background: transparent; color: var(--primary); }
+        .button.danger { background-color: var(--error-container); color: var(--on-error-container); }
+        .button.danger:hover { background-color: #f8c8c4; }
+        .button:disabled { background-color: var(--outline) !important; color: var(--surface) !important; cursor: not-allowed; opacity: 0.7; }
+        .button .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.5); border-top-color: var(--on-primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        .button:disabled .spinner { display: inline-block; }
+        .icon-button {
+            background: none; border: none; border-radius: 50%; width: 40px; height: 40px; display:inline-flex;
+            align-items:center; justify-content:center; cursor:pointer; color: var(--secondary);
+            transition: background-color var(--animation-speed-fast);
+        }
+        .icon-button:hover { background-color: var(--surface-variant); color: var(--primary); }
+        
+        /* --- Badges de Status --- */
+        .status-badge { padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 500; text-transform: capitalize; }
+        .status-pending { background-color: #FEF7CD; color: #9A7D0A; }
+        .status-processing { background-color: var(--primary-container); color: var(--primary); }
+        .status-completed { background-color: var(--success-container); color: var(--success); }
+        .status-cancelled { background-color: var(--error-container); color: var(--error); }
+
+        /* --- Modals --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity var(--animation-speed-fast) ease, visibility 0s var(--animation-speed-fast);
+        }
+        .modal.show { opacity: 1; visibility: visible; transition-delay: 0s; }
+        .modal-content {
+            background-color: var(--surface); border-radius: var(--radius-large); width: 90%; max-width: 800px; max-height: 90vh;
+            display: flex; flex-direction: column; animation: popIn var(--animation-speed-normal) ease-out; box-shadow: var(--shadow-elevation-medium);
+        }
+        .modal-header { padding: 16px 24px; border-bottom: 1px solid var(--surface-variant); display:flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.25rem; font-weight: 500; }
+        .modal-body { padding: 24px; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--surface-variant); display: flex; justify-content: flex-end; gap: 16px; }
+
+        /* --- Formulários e Inputs --- */
+        .form-row { display: flex; gap: 24px; margin-bottom: 16px; }
+        .input-field { margin-bottom: 16px; position: relative; }
+        .input-field label { font-size: .875rem; font-weight: 500; display: block; margin-bottom: 6px; }
+        .input-field input, .input-field select, .input-field textarea {
+            width: 100%; padding: 12px 16px; border-radius: var(--radius-medium); font-size: 1rem;
+            outline: none; background-color: var(--surface-container); border: 1px solid var(--surface-variant);
+            transition: all var(--animation-speed-fast) ease;
+        }
+        .input-field textarea { resize: vertical; min-height: 120px; }
+        .input-field input:focus, .input-field select:focus, .input-field textarea:focus {
+            border-color: var(--primary); background-color: var(--surface); box-shadow: 0 0 0 3px rgba(0, 114, 206, 0.2);
+        }
+        /* Validação */
+        .input-field input.invalid, .input-field select.invalid, .input-field textarea.invalid {
+            border-color: var(--error); background-color: var(--error-container);
+        }
+        .input-field input.invalid:focus, .input-field select.invalid:focus, .input-field textarea.invalid:focus {
+             box-shadow: 0 0 0 3px rgba(186, 26, 26, 0.2);
+        }
+        .error-message {
+            color: var(--error); font-size: 0.75rem; margin-top: 4px; display: none;
+        }
+        .images-preview {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px; margin-top: 16px; padding: 8px; background-color: var(--surface-container);
+            border-radius: var(--radius-medium); min-height: 104px; border: 1px dashed var(--surface-variant);
+        }
+        .images-preview img { width: 100%; height: 80px; object-fit: cover; border-radius: var(--radius-small); }
+        .form-actions { display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--surface-variant); }
+        .hint { font-size: 0.75rem; color: var(--outline); margin-top: 4px; }
+        
+        /* --- Notificações (Toast) --- */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            padding: 12px 24px; color: white; border-radius: var(--radius-medium); box-shadow: var(--shadow-elevation-medium);
+            font-weight: 500; animation: toastInRight var(--animation-speed-normal) ease-out forwards;
+        }
+        .toast.success { background-color: var(--success); }
+        .toast.error { background-color: var(--error); }
+
+        /* --- Responsividade --- */
+        @media (max-width: 1200px) {
+            .sidebar { position: fixed; left: -260px; z-index: 200; height: 100vh; }
+            .sidebar.open { left: 0; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+            #menu-toggle { display: inline-flex !important; }
+            .main-content { margin-left: 0; }
+        }
+        @media (max-width: 768px) {
+            .top-bar { flex-wrap: wrap; height: auto; padding: 16px; gap: 12px; }
+            .search-bar { width: 100%; max-width: 100%; margin-right: 0; order: 2; }
+            .user-info { order: 1; }
+            #menu-toggle { order: 0; }
+            .content-section { padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .form-row { flex-direction: column; gap: 0; }
+            .modal-content { width: 95%; max-height: 95vh; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Barra Lateral -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header"><h2>GameStore</h2><p>Painel Admin</p></div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-section="dashboard"><span class="material-icons">dashboard</span><span>Dashboard</span></a>
+                <a href="#" class="nav-link" data-section="games"><span class="material-icons">sports_esports</span><span>Jogos</span></a>
+                <a href="#" class="nav-link" data-section="orders"><span class="material-icons">receipt_long</span><span>Pedidos</span></a>
+                <a href="#" class="nav-link" data-section="settings"><span class="material-icons">settings</span><span>Ajustes</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-button" class="button text"><span class="material-icons">logout</span>Sair</button>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <!-- Barra Superior -->
+            <header class="top-bar">
+                 <button id="menu-toggle" class="icon-button" style="display: none;"><span class="material-icons">menu</span></button>
+                <div class="search-bar">
+                    <input type="search" id="global-search-input" placeholder="Buscar em jogos ou pedidos...">
+                    <button class="icon-button" aria-label="Buscar"><span class="material-icons">search</span></button>
+                </div>
+                <div class="user-info">
+                    <span id="user-name">Carregando...</span>
+                    <div id="user-avatar" class="avatar">?</div>
+                </div>
+            </header>
+
+            <!-- Seção Dashboard -->
+            <div class="content-section active" id="dashboard-section">
+                <div class="section-header"><h1>Dashboard</h1></div>
+                <div class="stats-grid" id="stats-grid"></div>
+                <div class="card">
+                    <div class="card-header"><h2>Últimos Pedidos</h2></div>
+                    <div class="card-body table-container">
+                        <table id="dashboard-orders-table">
+                            <thead><tr><th>ID</th><th>Cliente</th><th>Data</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Jogos -->
+            <div class="content-section" id="games-section">
+                <div class="section-header">
+                    <h1>Gerenciar Jogos</h1>
+                    <button id="add-game-button" class="button contained"><span class="material-icons">add</span>Adicionar Jogo</button>
+                </div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table id="games-table">
+                             <thead><tr><th>Jogo</th><th>Plataforma</th><th>Preço</th><th>Criado em</th><th>Ações</th></tr></thead>
+                             <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Pedidos -->
+            <div class="content-section" id="orders-section">
+                <div class="section-header"><h1>Todos os Pedidos</h1></div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="filters" style="display:flex; gap: 16px; flex-wrap: wrap;">
+                            <input type="date" id="order-date-filter" class="input-field" style="padding: 8px 12px; margin:0;">
+                            <select id="order-status-filter" class="input-field" style="padding: 8px 12px; margin:0;">
+                                <option value="all">Todos os Status</option>
+                                <option value="pending">Pendente</option>
+                                <option value="processing">Processando</option>
+                                <option value="completed">Concluído</option>
+                                <option value="cancelled">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body table-container">
+                        <table id="all-orders-table">
+                            <thead><tr><th>ID</th><th>Cliente</th><th>Itens</th><th>Data</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Ajustes -->
+            <div class="content-section" id="settings-section">
+                <div class="section-header"><h1>Configurações da Loja</h1></div>
+                <div class="card">
+                    <form id="settings-form">
+                        <div class="card-header"><h3>Informações de Contato e Frete</h3></div>
+                        <div class="card-body">
+                            <div class="input-field">
+                                <label for="whatsapp-number">Número de WhatsApp para Pedidos</label>
+                                <input type="tel" id="whatsapp-number" name="whatsapp" placeholder="5511999999999">
+                                <p class="hint">Formato: código do país + DDD + número, sem espaços.</p>
+                                <div class="error-message"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-field">
+                                    <label for="shipping-value">Valor Fixo do Frete (R$)</label>
+                                    <input type="number" id="shipping-value" name="shippingValue" placeholder="15.00" step="0.01">
+                                    <div class="error-message"></div>
+                                </div>
+                                <div class="input-field">
+                                    <label for="free-shipping">Frete Grátis acima de (R$)</label>
+                                    <input type="number" id="free-shipping" name="freeShipping" placeholder="250.00" step="0.01">
+                                    <div class="error-message"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions" style="padding: 24px; border-top: 1px solid var(--surface-variant);">
+                            <button type="submit" id="save-settings-button" class="button contained">
+                                <span class="button-text">Salvar Configurações</span>
+                                <div class="spinner"></div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Modal do Jogo (Adicionar/Editar) -->
+    <div id="game-modal" class="modal">
+        <div class="modal-content">
+            <form id="game-form" novalidate>
+                <div class="modal-header">
+                    <h2 id="game-modal-title"></h2>
+                    <button type="button" class="icon-button modal-close" aria-label="Fechar"><span class="material-icons">close</span></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="game-id" name="gameId">
+                    <div class="form-row">
+                        <div class="input-field">
+                            <label for="game-title">Título*</label>
+                            <input type="text" id="game-title" name="title" required>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="input-field">
+                            <label for="game-platform">Plataforma*</label>
+                            <select id="game-platform" name="platform" required>
+                                <option value="">Selecione</option><option value="PS5">PlayStation 5</option><option value="PS4">PlayStation 4</option>
+                            </select>
+                            <div class="error-message"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="input-field">
+                            <label for="game-price">Preço (R$)*</label>
+                            <input type="number" id="game-price" name="price" step="0.01" required min="0">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="input-field">
+                            <label for="game-old-price">Preço Antigo (Opcional)</label>
+                            <input type="number" id="game-old-price" name="oldPrice" step="0.01" min="0">
+                            <div class="error-message"></div>
+                        </div>
+                    </div>
+                    <div class="input-field">
+                        <label for="game-description">Descrição*</label>
+                        <textarea id="game-description" name="description" rows="4" required></textarea>
+                        <div class="error-message"></div>
+                    </div>
+                    <div class="input-field">
+                        <label for="game-youtube">Link do Vídeo no YouTube (Opcional)</label>
+                        <input type="text" id="game-youtube" name="youtubeId" placeholder="https://www.youtube.com/watch?v=...">
+                        <p class="hint">Cole o link completo do YouTube (ex: https://www.youtube.com/watch?v=ABCDE)</p>
+                    </div>
+                    <div class="input-field">
+                        <label for="game-image-urls">URLs das Imagens*</label>
+                        <textarea id="game-image-urls" name="imageUrls" rows="5" placeholder="Cole uma URL por linha. A primeira será a capa." required></textarea>
+                        <div class="error-message"></div>
+                        <div id="game-images-preview" class="images-preview"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="button text modal-close">Cancelar</button>
+                    <button type="submit" id="save-game-button" class="button contained">
+                        <span class="button-text">Salvar</span>
+                        <div class="spinner"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Detalhes do Pedido -->
+    <div id="order-modal" class="modal">
+         <div class="modal-content">
+             <div class="modal-header">
+                <h2 id="order-modal-title">Detalhes do Pedido</h2>
+                <button type="button" class="icon-button modal-close" aria-label="Fechar"><span class="material-icons">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div id="order-details-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="button text modal-close">Fechar</button>
+                <button id="update-order-status-button" class="button contained">
+                    <span class="button-text">Atualizar Status</span>
+                    <div class="spinner"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 id="confirm-modal-title">Confirmar Ação</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-modal-text">Você tem certeza?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-cancel-button" type="button" class="button text">Cancelar</button>
+                <button id="confirm-ok-button" type="button" class="button contained danger">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container de Toasts -->
+    <div id="toast-container"></div>
+    <!-- Scripts Firebase (Módulos Modernos) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signOut,
+            signInAnonymously,
+            signInWithCustomToken
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            doc,
+            addDoc,
+            setDoc,
+            updateDoc,
+            deleteDoc,
+            onSnapshot,
+            getDocs,
+            getDoc,
+            query,
+            orderBy,
+            limit,
+            where,
+            Timestamp,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // --- Configuração do Firebase ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyfJtCTZdIt5IUG5BZNmDd9UiaKBIyKZY",
+            authDomain: "arenadeconhecimento.firebaseapp.com",
+            databaseURL: "https://arenadeconhecimento-default-rtdb.firebaseio.com",
+            projectId: "arenadeconhecimento",
+            storageBucket: "arenadeconhecimento.appspot.com",
+            messagingSenderId: "889132093510",
+            appId: "1:889132093510:web:d9d7ddd92fec82d247ba47"
+        };
+        
+        // --- Inicialização dos Serviços ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const $ = selector => document.querySelector(selector);
+        let currentOrderId = null;
+        let unsubscribeDashboard, unsubscribeGames, unsubscribeOrders;
+
+function extractYoutubeId(url) {
+    if (!url || typeof url !== 'string') return '';
+    
+    url = url.trim();
+    if (url === '') return '';
+    
+    // Verifica se já é um ID (11 caracteres alfanuméricos)
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+        return url;
+    }
+    
+    // Padrões de URL do YouTube
+    const patterns = [
+        /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)([^"&?\/\s]{11}))/i,
+        /(?:youtu\.be\/)([^"&?\/\s]{11})/i,
+        /(?:youtube\.com\/shorts\/)([^"&?\/\s]{11})/i,
+        /(?:youtube\.com\/live\/)([^"&?\/\s]{11})/i
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    
+    return '';
+}
+
+// E modifique a parte do handleSaveGame para:
+async function handleSaveGame(e) {
+    e.preventDefault();
+    if (!validateForm($('#game-form'))) {
+        showToast("Por favor, corrija os erros no formulário.", "error");
+        return;
+    }
+
+    const button = $('#save-game-button');
+    toggleButtonLoading(button, true);
+
+    const gameId = $('#game-id').value;
+    const youtubeInput = $('#game-youtube').value.trim();
+    
+    const gameData = {
+        title: $('#game-title').value.trim(),
+        platform: $('#game-platform').value,
+        price: parseFloat($('#game-price').value),
+        oldPrice: parseFloat($('#game-old-price').value) || null,
+        description: $('#game-description').value.trim(),
+        youtubeId: youtubeInput ? extractYoutubeId(youtubeInput) : null,
+        images: $('#game-image-urls').value.split('\n').filter(url => url.trim() !== ''),
+        updatedAt: serverTimestamp()
+    };
+
+    try {
+        if (gameId) {
+            await updateDoc(doc(db, "games", gameId), gameData);
+        } else {
+            gameData.createdAt = serverTimestamp();
+            await addDoc(collection(db, "games"), gameData);
+        }
+        showToast(`Jogo ${gameId ? 'atualizado' : 'salvo'} com sucesso!`, 'success');
+        $('#game-modal').classList.remove('show');
+    } catch (error) {
+        handleCRUDError(error, "salvar jogo");
+    } finally {
+        toggleButtonLoading(button, false);
+    }
+}
+
+        // --- Autenticação e Inicialização do Painel ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                const userInitial = (user.displayName || user.email || 'A').charAt(0).toUpperCase();
+                $('#user-name').textContent = user.displayName || user.email;
+                $('#user-avatar').textContent = userInitial;
+                initializeAdminPanel();
+            } else {
+                // Se não houver usuário, tenta logar com token customizado ou anonimamente
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    signInWithCustomToken(auth, __initial_auth_token).catch(handleAuthError);
+                } else {
+                     // Para desenvolvimento local, pode ser útil logar anonimamente
+                    signInAnonymously(auth).catch(handleAuthError);
+                }
+            }
+        });
+
+        function handleAuthError(error) {
+             console.error("Erro de autenticação:", error);
+             document.body.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; height:100vh; text-align:center; font-family:'Roboto',sans-serif;">
+                    <div>
+                        <h1>Acesso Negado</h1>
+                        <p style="margin-top:8px;">Ocorreu um erro ao autenticar. Verifique o console para mais detalhes.</p>
+                    </div>
+                </div>`;
+        }
+
+
+        // --- Funções de Inicialização e Eventos ---
+        function initializeAdminPanel() {
+            setupEventListeners();
+            loadDashboardData();
+            attachRealtimeListeners();
+            loadSettings();
+        }
+
+        function setupEventListeners() {
+            // Navegação principal
+            document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', handleNavigation));
+
+            // Fechar modais
+            document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal').classList.remove('show')));
+            
+            // Botões de ação
+            $('#add-game-button').addEventListener('click', openAddGameModal);
+            $('#logout-button').addEventListener('click', () => signOut(auth));
+            $('#update-order-status-button').addEventListener('click', handleUpdateOrderStatus);
+            $('#menu-toggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+
+            // Formulários
+            $('#game-form').addEventListener('submit', handleSaveGame);
+            $('#settings-form').addEventListener('submit', saveSettings);
+            
+            // Filtros e buscas
+            $('#order-status-filter').addEventListener('input', attachRealtimeListeners);
+            $('#order-date-filter').addEventListener('input', attachRealtimeListeners);
+            $('#global-search-input').addEventListener('input', handleGlobalSearch);
+            $('#game-image-urls').addEventListener('input', previewImageUrls);
+        }
+
+        function handleNavigation(e) {
+            e.preventDefault();
+            const sectionId = e.currentTarget.dataset.section + '-section';
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            $(`#${sectionId}`).classList.add('active');
+            $('#global-search-input').value = '';
+            $('#global-search-input').dispatchEvent(new Event('input')); // Limpa a busca
+            if (window.innerWidth <= 1200) {
+                 $('#sidebar').classList.remove('open');
+            }
+        }
+        
+        // --- Carregamento de Dados (Firestore) ---
+        function attachRealtimeListeners() {
+            // Cancela listeners anteriores para evitar duplicação
+            if (unsubscribeDashboard) unsubscribeDashboard();
+            if (unsubscribeGames) unsubscribeGames();
+            if (unsubscribeOrders) unsubscribeOrders();
+
+            // Listener para últimos pedidos no dashboard
+            const dashboardQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(5));
+            unsubscribeDashboard = onSnapshot(dashboardQuery, snapshot => {
+                renderTable($('#dashboard-orders-table tbody'), snapshot, renderOrderRow, { colCount: 6 });
+            }, handleSnapshotError);
+
+            // Listener para a tabela de jogos
+            const gamesQuery = query(collection(db, "games"), orderBy("createdAt", "desc"));
+            unsubscribeGames = onSnapshot(gamesQuery, snapshot => {
+                renderTable($('#games-table tbody'), snapshot, renderGameRow, { colCount: 5 });
+            }, handleSnapshotError);
+            
+            // Listener para todos os pedidos com filtros
+            const statusFilter = $('#order-status-filter').value;
+            const dateFilter = $('#order-date-filter').value;
+            let ordersRef = collection(db, "orders");
+            let conditions = [orderBy("createdAt", "desc")];
+            if (statusFilter !== 'all') {
+                conditions.push(where("status", "==", statusFilter));
+            }
+            if(dateFilter) {
+                const startOfDay = new Date(dateFilter);
+                startOfDay.setUTCHours(0,0,0,0);
+                const endOfDay = new Date(dateFilter);
+                endOfDay.setUTCHours(23,59,59,999);
+                conditions.push(where("createdAt", ">=", Timestamp.fromDate(startOfDay)));
+                conditions.push(where("createdAt", "<=", Timestamp.fromDate(endOfDay)));
+            }
+
+            const allOrdersQuery = query(ordersRef, ...conditions);
+            unsubscribeOrders = onSnapshot(allOrdersQuery, snapshot => {
+                renderTable($('#all-orders-table tbody'), snapshot, renderOrderRow, { colCount: 7 });
+            }, handleSnapshotError);
+        }
+        
+        async function loadDashboardData() {
+            const grid = $('#stats-grid');
+            grid.innerHTML = Array(4).fill('').map(() => `<div class="stat-card"><div class="stat-info"><div class="skeleton"></div><div class="skeleton short"></div></div></div>`).join('');
+            
+            try {
+                const gamesQuery = query(collection(db, "games"));
+                const ordersQuery = query(collection(db, "orders"));
+
+                const [gamesSnap, ordersSnap] = await Promise.all([
+                    getDocs(gamesQuery),
+                    getDocs(ordersQuery)
+                ]);
+
+                let pendingCount = 0;
+                let revenue = 0;
+                ordersSnap.forEach(doc => {
+                    const order = doc.data();
+                    if (order.status === 'pending') pendingCount++;
+                    if (order.status === 'completed') revenue += order.total;
+                });
+
+                // Simulação de contagem de usuários
+                const userCount = Math.floor(Math.random() * (0 - 0) + 0); // Substituir pela lógica real se houver uma coleção de usuários
+
+                grid.innerHTML = `
+                    <div class="stat-card"><div class="stat-info"><h3>${gamesSnap.size}</h3><p>Jogos Cadastrados</p></div></div>
+                    <div class="stat-card"><div class="stat-info"><h3>${pendingCount}</h3><p>Pedidos Pendentes</p></div></div>
+                    <div class="stat-card"><div class="stat-info"><h3>R$ ${revenue.toFixed(2).replace('.',',')}</h3><p>Receita Total</p></div></div>
+                    <div class="stat-card"><div class="stat-info"><h3>${userCount}</h3><p>Usuários</p></div></div>`;
+            } catch (error) {
+                console.error("Erro ao carregar dados do dashboard:", error);
+                showToast("Falha ao carregar o dashboard.", "error");
+                grid.innerHTML = `<p>Não foi possível carregar os dados.</p>`;
+            }
+        }
+        
+        async function loadSettings() {
+            try {
+                const docRef = doc(db, "settings", "main");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const settings = docSnap.data();
+                    $('#whatsapp-number').value = settings.whatsapp || '';
+                    $('#shipping-value').value = settings.shipping?.value || '';
+                    $('#free-shipping').value = settings.shipping?.freeThreshold || '';
+                }
+            } catch (error) {
+                console.error("Erro ao carregar configurações:", error);
+                showToast("Falha ao carregar configurações.", "error");
+            }
+        }
+
+        // --- Funções de Renderização ---
+        function renderTable(tableBody, snapshot, renderRowFn, options = {}) {
+            renderTableLoading(tableBody, options.colCount);
+            tableBody.innerHTML = '';
+            if (snapshot.empty) {
+                tableBody.innerHTML = `<tr><td colspan="${options.colCount}" class="loading-cell">Nenhum item encontrado.</td></tr>`;
+                return;
+            }
+            snapshot.forEach(doc => renderRowFn({ id: doc.id, ...doc.data() }, tableBody));
+        }
+        
+        function renderGameRow(game, tableBody) {
+            const row = tableBody.insertRow();
+            row.dataset.search = game.title.toLowerCase();
+            const price = game.price ? game.price.toFixed(2).replace('.', ',') : 'N/A';
+            const date = game.createdAt ? game.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
+            const imageUrl = game.images && game.images.length > 0 ? game.images[0] : 'https://placehold.co/50x65/e1e2e9/888?text=?';
+
+            row.innerHTML = `
+                <td><div style="display:flex; align-items:center; gap:16px;"><img src="${imageUrl}" style="width:50px; height:65px; object-fit:cover; border-radius:4px;"><span>${game.title}</span></div></td>
+                <td>${game.platform}</td>
+                <td>R$ ${price}</td>
+                <td>${date}</td>
+                <td>
+                    <button class="icon-button edit-game" data-id="${game.id}"><span class="material-icons">edit</span></button>
+                    <button class="icon-button delete-game" data-id="${game.id}"><span class="material-icons">delete</span></button>
+                </td>`;
+            row.querySelector('.edit-game').addEventListener('click', e => editGame(e.currentTarget.dataset.id));
+            row.querySelector('.delete-game').addEventListener('click', e => confirmDeleteGame(e.currentTarget.dataset.id));
+        }
+
+        function renderOrderRow(order, tableBody) {
+            const row = tableBody.insertRow();
+            row.dataset.search = `${order.userName || order.userEmail} ${order.id}`.toLowerCase();
+            const total = order.total ? order.total.toFixed(2).replace('.', ',') : 'N/A';
+            const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
+            
+            row.innerHTML = `
+                <td>#${order.id.slice(-6).toUpperCase()}</td>
+                <td>${order.userName || order.userEmail}</td>
+                <td>${order.items.length}</td>
+                <td>${date}</td>
+                <td>R$ ${total}</td>
+                <td><span class="status-badge status-${order.status}">${order.status || 'desconhecido'}</span></td>
+                <td><button class="icon-button view-order" data-id="${order.id}"><span class="material-icons">visibility</span></button></td>`;
+            row.querySelector('.view-order').addEventListener('click', e => viewOrder(e.currentTarget.dataset.id));
+        }
+
+        // --- CRUD e Ações ---
+        function openAddGameModal() {
+            $('#game-modal-title').textContent = 'Adicionar Novo Jogo';
+            $('#game-form').reset();
+            $('#game-id').value = '';
+            $('#game-images-preview').innerHTML = '';
+            clearFormValidation($('#game-form'));
+            $('#game-modal').classList.add('show');
+        }
+
+        async function editGame(id) {
+            try {
+                const docRef = doc(db, "games", id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const game = docSnap.data();
+                    $('#game-modal-title').textContent = 'Editar Jogo';
+                    $('#game-id').value = id;
+                    $('#game-title').value = game.title;
+                    $('#game-platform').value = game.platform;
+                    $('#game-price').value = game.price;
+                    $('#game-old-price').value = game.oldPrice || '';
+                    $('#game-description').value = game.description;
+                    // Exibe o link completo se existir um ID
+                    $('#game-youtube').value = game.youtubeId ? `https://www.youtube.com/watch?v=${game.youtubeId}` : '';
+                    $('#game-image-urls').value = game.images ? game.images.join('\n') : '';
+                    previewImageUrls();
+                    clearFormValidation($('#game-form'));
+                    $('#game-modal').classList.add('show');
+                } else {
+                    showToast("Jogo não encontrado.", "error");
+                }
+            } catch (error) {
+                handleCRUDError(error, "carregar jogo");
+            }
+        }
+        
+
+        
+        async function confirmDeleteGame(id) {
+            const confirmed = await showConfirmModal({
+                title: 'Excluir Jogo?',
+                text: 'Esta ação é irreversível. O jogo será excluído permanentemente.'
+            });
+            if (confirmed) {
+                deleteGame(id);
+            }
+        }
+        
+        async function deleteGame(id) {
+            try {
+                await deleteDoc(doc(db, "games", id));
+                showToast('Jogo excluído com sucesso!', 'success');
+            } catch (error) {
+                handleCRUDError(error, "excluir jogo");
+            }
+        }
+
+        async function viewOrder(id) {
+            currentOrderId = id;
+            try {
+                const orderRef = doc(db, "orders", id);
+                const orderSnap = await getDoc(orderRef);
+                if (!orderSnap.exists()) {
+                    showToast("Pedido não encontrado.", "error");
+                    return;
+                }
+                
+                const order = orderSnap.data();
+                const total = order.total.toFixed(2).replace('.',',');
+                const date = order.createdAt.toDate().toLocaleString('pt-BR');
+
+                const detailsHtml = `
+                    <div class="info-item"><span class="info-label">Nº:</span><span class="info-value">#${id.slice(-6).toUpperCase()}</span></div>
+                    <div class="info-item"><span class="info-label">Data:</span><span class="info-value">${date}</span></div>
+                    <div class="info-item"><span class="info-label">Cliente:</span><span class="info-value">${order.userName} (${order.userEmail})</span></div>
+                    <div class="input-field" style="margin-top:16px;">
+                        <label for="order-status-select">Status do Pedido:</label>
+                        <select id="order-status-select" class="input-field" style="padding: 8px 12px; width: 100%;">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendente</option>
+                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processando</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Concluído</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
+                        </select>
+                    </div>
+                    <h3 style="margin-top: 24px; margin-bottom: 16px;">Itens do Pedido</h3>
+                    <div class="table-container">
+                        <table>
+                            ${order.items.map(item => `
+                                <tr>
+                                    <td><img src="${item.image}" style="width:40px;height:50px;object-fit:cover;border-radius:4px;margin-right:12px;"></td>
+                                    <td>${item.quantity}x ${item.title}</td>
+                                    <td style="text-align:right">R$ ${item.price.toFixed(2).replace('.',',')}</td>
+                                </tr>`).join('')}
+                            <tr style="font-weight:bold; border-top:1px solid var(--surface-variant);">
+                                <td colspan="2" style="text-align:right">TOTAL</td>
+                                <td style="text-align:right">R$ ${total}</td>
+                            </tr>
+                        </table>
+                    </div>`;
+
+                $('#order-details-content').innerHTML = detailsHtml;
+                $('#order-modal').classList.add('show');
+
+            } catch(error) {
+                handleCRUDError(error, "visualizar pedido");
+            }
+        }
+        
+        async function handleUpdateOrderStatus() {
+            if (!currentOrderId) return;
+            const button = $('#update-order-status-button');
+            toggleButtonLoading(button, true);
+
+            try {
+                const newStatus = $('#order-status-select').value;
+                await updateDoc(doc(db, `orders/${currentOrderId}`), { status: newStatus });
+                showToast('Status do pedido atualizado!', 'success');
+                $('#order-modal').classList.remove('show');
+            } catch (error) {
+                handleCRUDError(error, "atualizar status");
+            } finally {
+                toggleButtonLoading(button, false);
+            }
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            if (!validateForm($('#settings-form'))) {
+                showToast("Por favor, corrija os erros no formulário.", "error");
+                return;
+            }
+
+            const button = $('#save-settings-button');
+            toggleButtonLoading(button, true);
+
+            const settings = {
+                whatsapp: $('#whatsapp-number').value,
+                shipping: {
+                    value: parseFloat($('#shipping-value').value) || 0,
+                    freeThreshold: parseFloat($('#free-shipping').value) || 9999
+                }
+            };
+
+            try {
+                await setDoc(doc(db, "settings", "main"), settings);
+                showToast('Configurações salvas com sucesso!', 'success');
+            } catch (error) {
+                handleCRUDError(error, "salvar configurações");
+            } finally {
+                toggleButtonLoading(button, false);
+            }
+        }
+        
+        // --- Funções Utilitárias ---
+        
+        function handleGlobalSearch(e) {
+            const term = e.target.value.toLowerCase();
+            const activeSectionId = $('.content-section.active').id;
+            let tableBody;
+            if (activeSectionId === 'games-section') tableBody = $('#games-table tbody');
+            else if (activeSectionId === 'orders-section') tableBody = $('#all-orders-table tbody');
+            else if (activeSectionId === 'dashboard-section') tableBody = $('#dashboard-orders-table tbody');
+            else return;
+            
+            if (tableBody) {
+                tableBody.querySelectorAll('tr').forEach(row => {
+                    const searchableText = (row.dataset.search || '').toLowerCase();
+                    row.style.display = searchableText.includes(term) ? '' : 'none';
+                });
+            }
+        }
+
+        function previewImageUrls() {
+            const urls = $('#game-image-urls').value.split('\n').filter(url => url.trim().startsWith('http'));
+            $('#game-images-preview').innerHTML = urls.map(url => `<img src="${url}" alt="Preview" onerror="this.src='https://placehold.co/80x80/eee/ccc?text=Inválida'">`).join('');
+        }
+
+        function renderTableLoading(tableBody, colCount) {
+            if (tableBody) {
+                tableBody.innerHTML = `<tr><td colspan="${colCount}" class="loading-cell">Carregando dados...</td></tr>`;
+            }
+        }
+
+        function toggleButtonLoading(button, isLoading) {
+            if (!button) return;
+            button.disabled = isLoading;
+            const textSpan = button.querySelector('.button-text');
+            const spinner = button.querySelector('.spinner');
+            if (textSpan) textSpan.style.display = isLoading ? 'none' : 'inline';
+            if (spinner) spinner.style.display = isLoading ? 'inline-block' : 'none';
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            $('#toast-container').appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function showConfirmModal(options) {
+            return new Promise(resolve => {
+                const modal = $('#confirm-modal');
+                $('#confirm-modal-title').textContent = options.title || 'Confirmar';
+                $('#confirm-modal-text').textContent = options.text || 'Você tem certeza?';
+                
+                const okButton = $('#confirm-ok-button');
+                const cancelButton = $('#confirm-cancel-button');
+                
+                const onOk = () => {
+                    close();
+                    resolve(true);
+                };
+                
+                const onCancel = () => {
+                    close();
+                    resolve(false);
+                };
+                
+                function close() {
+                    modal.classList.remove('show');
+                    okButton.removeEventListener('click', onOk);
+                    cancelButton.removeEventListener('click', onCancel);
+                }
+
+                okButton.addEventListener('click', onOk, { once: true });
+                cancelButton.addEventListener('click', onCancel, { once: true });
+                
+                modal.classList.add('show');
+            });
+        }
+        
+        function handleSnapshotError(error) {
+            console.error("Erro no listener do Firestore:", error);
+            showToast("Erro ao receber atualizações em tempo real.", "error");
+        }
+        
+        function handleCRUDError(error, action) {
+            console.error(`Erro ao ${action}:`, error);
+            showToast(`Ocorreu um erro ao ${action}. Tente novamente.`, "error");
+        }
+        
+        // --- Validação de Formulários ---
+        function validateForm(form) {
+            let isValid = true;
+            clearFormValidation(form);
+            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    setInvalid(input, 'Este campo é obrigatório.');
+                }
+            });
+
+            // Validações específicas
+            const priceInput = form.querySelector('#game-price');
+            if (priceInput && priceInput.value && parseFloat(priceInput.value) < 0) {
+                isValid = false;
+                setInvalid(priceInput, 'O preço não pode ser negativo.');
+            }
+
+            const imageUrlsInput = form.querySelector('#game-image-urls');
+            if(imageUrlsInput && imageUrlsInput.hasAttribute('required')) {
+                 const urls = imageUrlsInput.value.split('\n').filter(url => url.trim().startsWith('http'));
+                 if (urls.length === 0) {
+                     isValid = false;
+                     setInvalid(imageUrlsInput, 'Adicione pelo menos uma URL de imagem válida.');
+                 }
+            }
+            
+            const whatsappInput = form.querySelector('#whatsapp-number');
+            if (whatsappInput && whatsappInput.value && !/^\d{10,14}$/.test(whatsappInput.value)) {
+                isValid = false;
+                setInvalid(whatsappInput, 'Número de WhatsApp inválido.');
+            }
+
+            return isValid;
+        }
+
+        function setInvalid(input, message) {
+            input.classList.add('invalid');
+            const errorDiv = input.nextElementSibling;
+            if (errorDiv && errorDiv.classList.contains('error-message')) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        function clearFormValidation(form) {
+            form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+            form.querySelectorAll('.error-message').forEach(el => {
+                el.textContent = '';
+                el.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
