@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameStore - Painel Administrativo</title>
-    <!-- Icons e Fonts -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Estilos CSS -->
     <style>
     .modal-body {
     padding: 24px;
@@ -244,7 +242,6 @@
 </head>
 <body>
     <div class="admin-container">
-        <!-- Barra Lateral -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header"><h2>GameStore</h2><p>Painel Admin</p></div>
             <nav class="sidebar-nav">
@@ -258,9 +255,7 @@
             </div>
         </aside>
 
-        <!-- Conteúdo Principal -->
         <main class="main-content">
-            <!-- Barra Superior -->
             <header class="top-bar">
                  <button id="menu-toggle" class="icon-button" style="display: none;"><span class="material-icons">menu</span></button>
                 <div class="search-bar">
@@ -273,7 +268,6 @@
                 </div>
             </header>
 
-            <!-- Seção Dashboard -->
             <div class="content-section active" id="dashboard-section">
                 <div class="section-header"><h1>Dashboard</h1></div>
                 <div class="stats-grid" id="stats-grid"></div>
@@ -288,7 +282,6 @@
                 </div>
             </div>
 
-            <!-- Seção de Jogos -->
             <div class="content-section" id="games-section">
                 <div class="section-header">
                     <h1>Gerenciar Jogos</h1>
@@ -297,14 +290,13 @@
                 <div class="card">
                     <div class="card-body table-container">
                         <table id="games-table">
-                             <thead><tr><th>Jogo</th><th>Plataforma</th><th>Preço</th><th>Criado em</th><th>Ações</th></tr></thead>
-                             <tbody></tbody>
+                                <thead><tr><th>Jogo</th><th>Plataforma</th><th>Preço</th><th>Criado em</th><th>Ações</th></tr></thead>
+                                <tbody></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Seção de Pedidos -->
             <div class="content-section" id="orders-section">
                 <div class="section-header"><h1>Todos os Pedidos</h1></div>
                 <div class="card">
@@ -329,7 +321,6 @@
                 </div>
             </div>
 
-            <!-- Seção de Ajustes -->
             <div class="content-section" id="settings-section">
                 <div class="section-header"><h1>Configurações da Loja</h1></div>
                 <div class="card">
@@ -367,9 +358,6 @@
         </main>
     </div>
 
-    <!-- Modals -->
-
-    <!-- Modal do Jogo (Adicionar/Editar) -->
     <div id="game-modal" class="modal">
         <div class="modal-content">
             <form id="game-form" novalidate>
@@ -433,7 +421,6 @@
         </div>
     </div>
     
-    <!-- Modal de Detalhes do Pedido -->
     <div id="order-modal" class="modal">
          <div class="modal-content">
              <div class="modal-header">
@@ -453,7 +440,6 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação -->
     <div id="confirm-modal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
@@ -469,18 +455,10 @@
         </div>
     </div>
 
-    <!-- Container de Toasts -->
     <div id="toast-container"></div>
-    <!-- Scripts Firebase (Módulos Modernos) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            signOut,
-            signInAnonymously,
-            signInWithCustomToken
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import {
             getFirestore,
             collection,
@@ -590,33 +568,23 @@ async function handleSaveGame(e) {
     }
 }
 
-        // --- Autenticação e Inicialização do Painel ---
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                const userInitial = (user.displayName || user.email || 'A').charAt(0).toUpperCase();
-                $('#user-name').textContent = user.displayName || user.email;
-                $('#user-avatar').textContent = userInitial;
-                initializeAdminPanel();
-            } else {
-                // Se não houver usuário, tenta logar com token customizado ou anonimamente
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    signInWithCustomToken(auth, __initial_auth_token).catch(handleAuthError);
-                } else {
-                     // Para desenvolvimento local, pode ser útil logar anonimamente
-                    signInAnonymously(auth).catch(handleAuthError);
-                }
-            }
-        });
+        // --- Autenticação e Inicialização do Painel (Login Removido) ---
+        // Define um usuário padrão, já que o login foi removido.
+        $('#user-name').textContent = "Administrador";
+        $('#user-avatar').textContent = "A";
 
+        // Inicializa o painel de administração diretamente.
+        initializeAdminPanel();
+        
         function handleAuthError(error) {
-             console.error("Erro de autenticação:", error);
+             console.error("Erro de autenticação ignorado:", error);
              document.body.innerHTML = `
-                <div style="display:flex; align-items:center; justify-content:center; height:100vh; text-align:center; font-family:'Roboto',sans-serif;">
-                    <div>
-                        <h1>Acesso Negado</h1>
-                        <p style="margin-top:8px;">Ocorreu um erro ao autenticar. Verifique o console para mais detalhes.</p>
-                    </div>
-                </div>`;
+                 <div style="display:flex; align-items:center; justify-content:center; height:100vh; text-align:center; font-family:'Roboto',sans-serif;">
+                     <div>
+                         <h1>Acesso Direto</h1>
+                         <p>A autenticação foi ignorada para acesso direto ao painel.</p>
+                     </div>
+                 </div>`;
         }
 
 
@@ -637,7 +605,16 @@ async function handleSaveGame(e) {
             
             // Botões de ação
             $('#add-game-button').addEventListener('click', openAddGameModal);
-            $('#logout-button').addEventListener('click', () => signOut(auth));
+            
+            // Botão Sair modificado para não usar Firebase Auth
+            $('#logout-button').addEventListener('click', () => {
+                showToast("Sessão encerrada.", "success");
+                document.body.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; height:100vh; text-align:center; font-family:'Roboto',sans-serif;">
+                    <div><h1>Você saiu.</h1><p>Atualize a página para entrar novamente.</p></div>
+                </div>`;
+            });
+
             $('#update-order-status-button').addEventListener('click', handleUpdateOrderStatus);
             $('#menu-toggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
 
@@ -844,8 +821,6 @@ async function handleSaveGame(e) {
                 handleCRUDError(error, "carregar jogo");
             }
         }
-        
-
         
         async function confirmDeleteGame(id) {
             const confirmed = await showConfirmModal({
@@ -1078,8 +1053,8 @@ async function handleSaveGame(e) {
             if(imageUrlsInput && imageUrlsInput.hasAttribute('required')) {
                  const urls = imageUrlsInput.value.split('\n').filter(url => url.trim().startsWith('http'));
                  if (urls.length === 0) {
-                     isValid = false;
-                     setInvalid(imageUrlsInput, 'Adicione pelo menos uma URL de imagem válida.');
+                      isValid = false;
+                      setInvalid(imageUrlsInput, 'Adicione pelo menos uma URL de imagem válida.');
                  }
             }
             
